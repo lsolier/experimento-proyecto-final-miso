@@ -8,3 +8,8 @@ class Config(object):
     PROPAGATE_EXCEPTIONS = True
     JWT_SECRET_KEY = os.getenv("SECRET_KEY", "test_key")
     DEBUG = True
+
+    DENY_ACCESS = False
+    if not os.environ.get('API_SECURITY_URL'):
+        DENY_ACCESS = True
+        print('API_SECURITY_URL environment variable does not exist, you will not be able to validate your identity.')
