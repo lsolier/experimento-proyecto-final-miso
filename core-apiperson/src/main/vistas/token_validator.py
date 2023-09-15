@@ -1,6 +1,5 @@
 import requests
 from functools import wraps
-
 from flask import request
 
 from src.config import Config
@@ -8,7 +7,6 @@ from src.config import Config
 class TokenValidator:
 
     def check_token(f):
-
         @wraps(f)
         def decorated(*args, **kwargs):
             if Config.DENY_ACCESS:
@@ -28,4 +26,3 @@ class TokenValidator:
                 return '', requests.codes.unauthorized
             return f(*args, **kwargs)
         return decorated
-
