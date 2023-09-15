@@ -16,3 +16,10 @@ class Config(object):
         print('API_SECURITY_URL environment variable does not exist, you will not be able to validate your identity.')
     else:
         print("API_SECURITY_URL: {0}".format(API_SECURITY_URL))
+
+    API_PERSON_URL = os.environ.get("API_PERSON_URL")
+    if not os.environ.get('API_PERSON_URL'):
+        DENY_ACCESS = True
+        print('API_PERSON_URL environment variable does not exist, you will not be able to validate your identity.')
+    else:
+        print("API_PERSON_URL: {0}".format(API_PERSON_URL))
