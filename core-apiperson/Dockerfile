@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 
 # set work directory
-WORKDIR /users
+WORKDIR /core-apiperson
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1

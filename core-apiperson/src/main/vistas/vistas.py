@@ -1,5 +1,3 @@
-from sqlite3 import IntegrityError
-
 import requests
 from flask_restful import Resource
 from flask import request
