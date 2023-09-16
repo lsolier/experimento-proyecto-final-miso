@@ -18,7 +18,7 @@ COPY src /users/src
 COPY manage.py /users
 
 # set environment variable for port
-ENV PORT_MD_APICANDIDATE 9001
+ENV PORT_CORE_APIPERSON 9000
 
 # run entrypoint.sh / start up
-CMD gunicorn --bind 0.0.0.0:${PORT_MD_APICANDIDATE} manage:app --log-level debug
+CMD gunicorn --bind 0.0.0.0:${PORT_CORE_APIPERSON} manage:app --log-level debug

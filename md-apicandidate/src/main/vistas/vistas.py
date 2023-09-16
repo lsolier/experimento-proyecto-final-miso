@@ -25,12 +25,18 @@ class CandidatesView(Resource):
             print("Error decoding token: {0}".format(err))
             return '', requests.codes.unauthorized
 
-        __payload = {'id_candidate': token_payload['sub']}
-        response = requests.get(Config.API_PERSON_URL, params=__payload, verify=False)
+        __candidate_id = token_payload['sub']
+        URL = Config.API_PERSON_URL + f"/{__candidate_id}"
+        response = requests.get(URL, headers={"Content-Type": "application/json"})
+
+        if response.status_code == requests.codes.not_found:
+            print('Candidate with id: {0} , does not exists'.format(token_payload['sub']))
+            return '', requests.codes.not_found
+
         if response.status_code != requests.codes.ok:
             print('Error reading person: {0}'.format(response.status_code))
             return '', requests.codes.service_unavailable
 
         candidate_found = response.json()
-        return {"username": candidate_found["username"], "email": candidate_found["email"]}, requests.codes.ok
+        return {"username": candidate_found["name"], "email": candidate_found["email"]}, requests.codes.ok
 

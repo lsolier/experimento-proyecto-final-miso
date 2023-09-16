@@ -1,51 +1,50 @@
-import responses
+from sqlite3 import IntegrityError
+
 import requests
-from flask_jwt_extended import decode_token
 from flask_restful import Resource
 from flask import request
+from marshmallow import ValidationError
 
-from src.config import Config
-from src.main.modelos import db
-from src.main.vistas.token_validator import TokenValidator
+from src.main.modelos import db, Person, PersonSchema, GetPersonByIdSchemaValidation, PersonBaseSchemaValidation
+
+person_schema = PersonSchema()
 
 # '/users/ping' Path
 class HealthView(Resource):
     def get(self):
         return "pong"
 
-# '/candidates/me' Path
-class CandidatesView(Resource):
+# '/persons' Path
+class PersonsView(Resource):
 
-    @responses.activate
-    @TokenValidator.check_token
-    def get(self):
-        print('TOKEN VALIDADO')
-        token_header = request.headers['authorization']
-        auth_token = token_header.split(maxsplit=1)[1]
+    def post(self):
+        schema = PersonBaseSchemaValidation()
         try:
-            #token_info = decode_token(encoded_token=auth_token, csrf_value=None, allow_expired=True)
-            token_info = "token-test"
+            schema.load(request.json)
+        except ValidationError as err:
+            print("Schema error: {0}".format(err))
+            return "", requests.codes.not_found
+        try:
+            new_person = Person(name=request.json['name'], email=request.json['email'])
+            db.session.add(new_person)
+            db.session.commit()
         except Exception as err:
-            print("Error decoding token: {0}".format(err))
-            return '', requests.codes.unauthorized
+            print("DB error: {0}".format(err))
+            return '', requests.codes.conflict
+        return {"id": new_person.id, "name": new_person.name, "email": new_person.email, "createdAt": str(new_person.createdAt.isoformat())}, requests.codes.created
 
-        #Esto es un mock temporal
-        self._mockResponse()
+# '/persons/{id}' Path
+class PersonView(Resource):
 
-        __payload = {'id_candidato': 123}
-        response = requests.get(Config.API_PERSON_URL, params=__payload, verify=False)
-        if response.status_code != requests.codes.ok:
-            print('Error reading person: {0}'.format(response.status_code))
-            return '', requests.codes.service_unavailable
+    def get(self, id):
+        schema = GetPersonByIdSchemaValidation()
+        try:
+            schema.load({"id": id})
+        except ValidationError as err:
+            print("Schema error: {0}".format(err))
+            return "", requests.codes.not_found
 
-        candidate_found = response.json()
-        return {"username": candidate_found["username"], "email": candidate_found["email"]}, requests.codes.ok
-
-    def _mockResponse(self):
-        mock_response = responses.Response(
-            method="GET",
-            url="http://api-person-url-mock",
-            json={"username": "l.solier", "email": "l.solier@uniandes.edu.co"},
-            status=200,
-        )
-        responses.add(mock_response)
+        retrieved_person = Person.query.filter_by(id=id).first()
+        if retrieved_person is None:
+            return '', requests.codes.not_found
+        return person_schema.dump(retrieved_person), requests.codes.ok
