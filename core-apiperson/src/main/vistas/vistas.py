@@ -24,9 +24,11 @@ class PersonsView(Resource):
             return "", requests.codes.not_found
         try:
             new_person = Person(name=request.json['name'], email=request.json['email'])
+            print("Person to save in DB: {0}".format(new_person))
             db.session.add(new_person)
             db.session.commit()
         except Exception as err:
+            db.session.rollback()
             print("DB error: {0}".format(err))
             return '', requests.codes.conflict
         return {"id": new_person.id, "name": new_person.name, "email": new_person.email, "createdAt": str(new_person.createdAt.isoformat())}, requests.codes.created
